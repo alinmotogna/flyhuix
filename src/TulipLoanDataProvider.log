@@ -1,0 +1,6 @@
+[2015-Aug-03 11:16:15.736450]: 
+
+--- TulipLoanDataProvider---
+
+[2015-Aug-03 11:16:15.736885]: -- Missing arguments. Usage is:
+[server_ip] [server_port] [machine_name] [platform_name] [simulation_flag, optional]
