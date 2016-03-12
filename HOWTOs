@@ -1,0 +1,14 @@
+1. HowTo compile Casablanca
+   https://casablanca.codeplex.com/wikipage?title=Setup%20and%20Build%20on%20Linux&referringTitle=Documentation
+    - CXX=g++-4.9 cmake .. -DBOOST_INCLUDEDIR=/home/build/omm-custom-libs/boost-1_54/include/ -DOPENSSL_LIBRARIES=/usr/lib/x86_64-linux-gnu/openssl-1.0.0/engines/ -DCMAKE_BUILD_TYPE=Release
+    - need to take out from casablanca/Release/src/CMakeLists.txt the option: Werror - all warnings are promoted to error with it
+
+2. Resources
+   discussion threads on casablanca forums that are relevant for levin
+    http://casablanca.codeplex.com/discussions/449352
+    http://casablanca.codeplex.com/discussions/541059
+    https://casablanca.codeplex.com/discussions/568637
+    http://casablanca.codeplex.com/discussions/639119
+    http://casablanca.codeplex.com/discussions/639208
+    http://casablanca.codeplex.com/discussions/643834   --> my question, not answered
+   https://www.youtube.com/watch?v=WvaxcicwIss#t=1638 --> CppCon talk from Casablanca's LeadArchitect
