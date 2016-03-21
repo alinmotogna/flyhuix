@@ -1,6 +1,6 @@
 project(FlyHuiX)
 cmake_minimum_required(VERSION 2.8)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Ofast -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -march=native")
 
 set(BOOST_ROOT /home/build/omm-custom-libs/boost-1_54/)
 set(Boost_USE_STATIC_LIBS ON)
