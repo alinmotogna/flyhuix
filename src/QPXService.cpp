@@ -10,6 +10,7 @@
 #include <thread>
 #include <cpprest/http_client.h>
 #include <boost/filesystem.hpp>
+#include <codecvt>
 
 const utility::string_t QPXService::Resources::URL=U("https://www.googleapis.com/qpxExpress/v1/trips/search?key=");
 const utility::string_t QPXService::Resources::KEY=U("AIzaSyDLo2QRtu4g-k-hPUv3kLRY5c6dDMWOv_0");
@@ -44,14 +45,17 @@ void QPXService::query(std::string filename)
     BOOST_LOG_TRIVIAL(trace) << "query from " << filename;
     web::http::client::http_client client(Resources::URL + Resources::KEY);
 
-    std::ifstream file(filename);
+    utility::ifstream_t file(filename);
+	//file.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<wchar_t>));
+	std::locale::global(std::locale(std::locale::empty(), new std::codecvt_utf8<wchar_t>));
+	
     if ( !file )
     {
         BOOST_LOG_TRIVIAL(error) << "error opening " << filename;
         return;
     }
-    std::stringstream buffer;
-    buffer << file.rdbuf();
+    utility::stringstream_t buffer;
+    buffer<<file.rdbuf();
     file.close();
 
     web::json::value message;
@@ -59,7 +63,7 @@ void QPXService::query(std::string filename)
     BOOST_LOG_TRIVIAL(trace) << " message is " << message.serialize();
 
     BOOST_LOG_TRIVIAL(trace) << " running ";
-    client.request(web::http::methods::POST, "", message)
+    client.request(web::http::methods::POST, utility::string_t(), message)
             .then([&](web::http::http_response response)
             {
                 BOOST_LOG_TRIVIAL(trace) << " -> response code:" << response.status_code();
