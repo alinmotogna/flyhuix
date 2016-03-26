@@ -12,6 +12,7 @@ void usage()
     BOOST_LOG_TRIVIAL(trace) << "-- Missing arguments. Usage is: ";
 }
 
+//test
 int main(int argc, char* argv[])
 {
     boost::log::add_file_log(
