@@ -104,6 +104,8 @@
     <ClInclude Include="..\src\QPXService.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\requests\hkdad.json" />
+    <None Include="..\requests\sample.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

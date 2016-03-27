@@ -29,5 +29,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="..\requests\hkdad.json">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\requests\sample.json">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

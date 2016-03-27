@@ -1,1 +1,1 @@
-{"request":{"passengers":{"adultCount":1},"slice":[{"origin":"BOS","destination":"LAX","date":"2016-03-19"},{"origin":"LAX","destination":"BOS","date":"2016-03-21"}]}}
+{"request":{"passengers":{"adultCount":1},"slice":[{"origin":"BOS","destination":"LAX","date":"2016-04-19"},{"origin":"LAX","destination":"BOS","date":"2016-04-21"}],"maxPrice":"HKD5000","solutions":10}}
