@@ -27,7 +27,8 @@ std::string printDuration(web::json::value duration)
     auto mins = duration_cast<minutes>(total_mins);
     
     utility::stringstream_t ss;
-    ss << std::setw(2) << std::setfill('0') << hrs.count() << ":" << mins.count();
+    ss << std::setw(2) << std::setfill('0') << hrs.count() 
+            << ":" << std::setw(2) << std::setfill('0') << mins.count();
     return ss.str();
 }
 
@@ -46,12 +47,17 @@ void QPXService::run()
     boost::filesystem::path p("../requests");
 
     std::vector<std::thread> thrs;
-    for(auto file = boost::filesystem::directory_iterator(p); file != boost::filesystem::directory_iterator(); file++)
+    for(auto file = boost::filesystem::directory_iterator(p); file != boost::filesystem::directory_iterator(); ++file)
     {
         BOOST_LOG_TRIVIAL(trace) << "probing " << file->path();
         if (file->path().extension() == ".json"){
-            std::thread th( &QPXService::query, this, file->path().string() );
-            //std::thread th( [this, file]() {query(file->path().string());} );
+            
+            //std::thread th( &QPXService::query, this, file->path().string() );
+            // DISCUSSION: 
+            // capturing iterator object 'file' and calling query(file->path().string()) is not correct - race condition
+            //  http://stackoverflow.com/questions/36325039/starting-c11-thread-with-a-lambda-capturing-local-variable
+            auto fn = file->path().string();
+            std::thread th( [fn, this] {query(fn);} );
             thrs.push_back(std::move(th));
         }
     }
@@ -123,10 +129,11 @@ public:
 
     utility::string_t print() { 
         utility::stringstream_t ss;
+        ss << " carrier:" << data[U("flight")][U("carrier")];
         for (auto& leg : data[U("leg")].as_array())
-            ss << Leg(leg).print() << "\n";
+            ss << "\n" << Leg(leg).print();
         if (!data[U("connectionDuration")].is_null())
-            ss << " layover: " << printDuration(data[U("connectionDuration")]) << "\n";
+            ss << " layover: " << printDuration(data[U("connectionDuration")]);
         
         return ss.str();
     }
@@ -144,7 +151,7 @@ public:
         utility::stringstream_t ss;
         ss << " duration: " << printDuration(data[U("duration")]) << "\n";
         for (auto& s : data[U("segment")].as_array())
-            ss << Segment(s).print() << "\n";
+            ss << Segment(s).print();
 
         return ss.str();
     }
@@ -162,21 +169,29 @@ void QPXService::process(web::http::http_response response)
     }
 
     auto json_value = response.extract_json().get();
+    
+    //BOOST_LOG_TRIVIAL(trace) << json_value.serialize();
     auto trips = json_value[U("trips")];
     
     auto data = trips[U("data")];
     BOOST_LOG_TRIVIAL(trace) << data.serialize();
 
     utility::stringstream_t sstr;
-    for (auto &a : data[U("airport")].as_array())
-            sstr << a[U("code")] << "/" << a[U("name")] << "; ";
+    for (auto &airport : data[U("airport")].as_array())
+            sstr << airport[U("code")] << "/" << airport[U("name")] << "; ";
     BOOST_LOG_TRIVIAL(trace) << "-- airports: "<< sstr.str();
+
+    sstr.str(utility::string_t());
+    sstr.clear();
+    for (auto &carrier : data[U("carrier")].as_array())
+            sstr << carrier[U("code")] << "/" << carrier[U("name")] << "; ";
+    BOOST_LOG_TRIVIAL(trace) << "-- carriers: "<< sstr.str();
 
     for (auto tripOpt : trips[U("tripOption")].as_array()) {
         utility::stringstream_t sstr;
         sstr << tripOpt[U("saleTotal")] << "\n";
         for (auto slice : tripOpt[U("slice")].as_array()) {
-            sstr << Slice(slice).print() << "\n";
+            sstr << Slice(slice).print() << "\n" ;
         }
         BOOST_LOG_TRIVIAL(trace) << "-- slice: " << sstr.str();
     }
