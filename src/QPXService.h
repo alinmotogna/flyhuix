@@ -6,7 +6,6 @@
  */
 
 #pragma once
-#include <string>
 #include <cpprest/http_msg.h>
 
 class QPXService
@@ -16,6 +15,7 @@ public:
     {
         static const utility::string_t URL;
         static const utility::string_t KEY;
+		static const utility::string_t BASE_JSON_QUERY;
     };
 
     QPXService();

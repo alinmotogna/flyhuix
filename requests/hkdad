@@ -1,1 +1,0 @@
-{"request":{"passengers":{"adultCount":2},"slice":[{"origin":"HKG","destination":"DAD","date":"2016-04-01","permittedDepartureTime":{"kind":"qpxexpress#timeOfDayRange","earliestTime":"17:00","latestTime":"23:59"}},{"origin":"DAD","destination":"HKG","date":"2016-04-04"}],"maxPrice":"HKD8000","solutions":10}}

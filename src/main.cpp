@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
         boost::log::keywords::format = "[%TimeStamp%]: %Message%",
         boost::log::keywords::auto_flush = true,
         boost::log::keywords::open_mode = (std::ios::out | std::ios::app));
-    boost::log::add_console_log(std::cout,
+	    boost::log::add_console_log(std::cout,
         boost::log::keywords::format = "[%TimeStamp%]: %Message%",
         boost::log::keywords::auto_flush = true);
     boost::log::add_common_attributes();

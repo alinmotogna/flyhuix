@@ -17,7 +17,7 @@
 const utility::string_t QPXService::Resources::URL=U("https://www.googleapis.com/qpxExpress/v1/trips/search?key=");
 const utility::string_t QPXService::Resources::KEY=U("AIzaSyDLo2QRtu4g-k-hPUv3kLRY5c6dDMWOv_0");
 
-std::string printDuration(web::json::value duration)
+utility::string_t printDuration(web::json::value duration)
 {
     using namespace std::chrono;
     auto total_mins = minutes(duration.as_integer());
@@ -27,9 +27,9 @@ std::string printDuration(web::json::value duration)
     auto mins = duration_cast<minutes>(total_mins);
     
     utility::stringstream_t ss;
-    ss << std::setw(2) << std::setfill('0') << hrs.count() 
-            << ":" << std::setw(2) << std::setfill('0') << mins.count();
-    return ss.str();
+	ss << std::setw(2) /*<< std::setfill('0')*/ << hrs.count() 
+            << ":" << std::setw(2) /*<< std::setfill('0')*/ << mins.count();
+	return ss.str();
 }
 
 QPXService::QPXService()
@@ -50,16 +50,19 @@ void QPXService::run()
     for(auto file = boost::filesystem::directory_iterator(p); file != boost::filesystem::directory_iterator(); ++file)
     {
         BOOST_LOG_TRIVIAL(trace) << "probing " << file->path();
-        if (file->path().extension() == ".json"){
-            
-            //std::thread th( &QPXService::query, this, file->path().string() );
-            // DISCUSSION: 
-            // capturing iterator object 'file' and calling query(file->path().string()) is not correct - race condition
-            //  http://stackoverflow.com/questions/36325039/starting-c11-thread-with-a-lambda-capturing-local-variable
-            auto fn = file->path().string();
-            std::thread th( [fn, this] {query(fn);} );
-            thrs.push_back(std::move(th));
-        }
+        if (file->path().extension() == ".json") {
+			if (file->path().filename() == "base.json") {
+				BOOST_LOG_TRIVIAL(trace) << "base " << file->path().string();
+			}
+			else {
+				//std::thread th( &QPXService::query, this, file->path().string() );
+				// DISCUSSION:  capturing iterator object 'file' and calling query(file->path().string()) is not correct - race condition
+				//  http://stackoverflow.com/questions/36325039/starting-c11-thread-with-a-lambda-capturing-local-variable
+				auto fn = file->path().string();
+				std::thread th([fn, this] {query(fn); });
+				thrs.push_back(std::move(th));
+			}
+		}
     }
 
     for (auto& t : thrs)
