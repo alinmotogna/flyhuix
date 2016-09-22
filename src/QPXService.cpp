@@ -177,7 +177,11 @@ void QPXService::process(web::http::http_response response)
     auto trips = json_value[U("trips")];
     
     auto data = trips[U("data")];
-    BOOST_LOG_TRIVIAL(trace) << data.serialize();
+	if (data[U("tripOption")].is_null() )
+	{
+		BOOST_LOG_TRIVIAL(trace) << "No results!";
+		return;
+	}
 
     utility::stringstream_t sstr;
     for (auto &airport : data[U("airport")].as_array())
