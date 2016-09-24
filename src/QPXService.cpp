@@ -27,9 +27,9 @@ utility::string_t printDuration(web::json::value duration)
     auto mins = duration_cast<minutes>(total_mins);
     
     utility::stringstream_t ss;
-	ss << std::setw(2) /*<< std::setfill('0')*/ << hrs.count() 
+    ss << std::setw(2) /*<< std::setfill('0')*/ << hrs.count()
             << ":" << std::setw(2) /*<< std::setfill('0')*/ << mins.count();
-	return ss.str();
+    return ss.str();
 }
 
 QPXService::QPXService()
@@ -51,18 +51,18 @@ void QPXService::run()
     {
         BOOST_LOG_TRIVIAL(trace) << "probing " << file->path();
         if (file->path().extension() == ".json") {
-			if (file->path().filename() == "base.json") {
-				BOOST_LOG_TRIVIAL(trace) << "base " << file->path().string();
-			}
-			else {
-				//std::thread th( &QPXService::query, this, file->path().string() );
-				// DISCUSSION:  capturing iterator object 'file' and calling query(file->path().string()) is not correct - race condition
-				//  http://stackoverflow.com/questions/36325039/starting-c11-thread-with-a-lambda-capturing-local-variable
-				auto fn = file->path().string();
-				std::thread th([fn, this] {query(fn); });
-				thrs.push_back(std::move(th));
-			}
-		}
+            if (file->path().filename() == "base.json") {
+                BOOST_LOG_TRIVIAL(trace) << "base " << file->path().string();
+            }
+            else {
+                //std::thread th( &QPXService::query, this, file->path().string() );
+                // DISCUSSION:  capturing iterator object 'file' and calling query(file->path().string()) is not correct - race condition
+                //  http://stackoverflow.com/questions/36325039/starting-c11-thread-with-a-lambda-capturing-local-variable
+                auto fn = file->path().string();
+                std::thread th([fn, this] {query(fn); });
+                thrs.push_back(std::move(th));
+            }
+        }
     }
 
     for (auto& t : thrs)
@@ -177,11 +177,11 @@ void QPXService::process(web::http::http_response response)
     auto trips = json_value[U("trips")];
     
     auto data = trips[U("data")];
-	if (data[U("tripOption")].is_null() )
-	{
-		BOOST_LOG_TRIVIAL(trace) << "No results!";
-		return;
-	}
+    if (data[U("tripOption")].is_null() )
+    {
+        BOOST_LOG_TRIVIAL(trace) << "No results!";
+        return;
+    }
 
     utility::stringstream_t sstr;
     for (auto &airport : data[U("airport")].as_array())
