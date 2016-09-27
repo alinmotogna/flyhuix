@@ -6,13 +6,17 @@
  */
 
 #include "QPXService.h"
-#include <boost/log/trivial.hpp>
 #include <thread>
 #include <cpprest/http_client.h>
+#include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
-#include <locale>
+#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/locale.hpp>
+#include <locale>
 #include <iomanip>
+
+namespace bgr = boost::gregorian;
+
 
 const utility::string_t QPXService::Resources::URL=U("https://www.googleapis.com/qpxExpress/v1/trips/search?key=");
 const utility::string_t QPXService::Resources::KEY=U("AIzaSyDLo2QRtu4g-k-hPUv3kLRY5c6dDMWOv_0");
@@ -30,6 +34,27 @@ utility::string_t printDuration(web::json::value duration)
     ss << std::setw(2) /*<< std::setfill('0')*/ << hrs.count()
             << ":" << std::setw(2) /*<< std::setfill('0')*/ << mins.count();
     return ss.str();
+}
+
+std::tuple<bgr::date, bgr::date> getNextWeekend(bgr::date refDate)
+{
+	auto nextFriday = refDate;
+	while (nextFriday.day_of_week() != bgr::Friday)
+		nextFriday = nextFriday + bgr::days(1);
+	auto nextSunday = nextFriday + bgr::days(2);
+
+	return std::make_tuple(nextFriday, nextSunday);
+}
+
+std::vector<std::string> getDestinations(std::string file)
+{
+	std::vector<std::string> destinations;
+	std::string line;
+	std::ifstream infile(file, std::ios_base::in);
+	while (getline(infile, line, '\n'))
+		destinations.push_back(line);
+
+	return destinations;
 }
 
 QPXService::QPXService()
@@ -53,6 +78,16 @@ void QPXService::run()
         if (file->path().extension() == ".json") {
             if (file->path().filename() == "base.json") {
                 BOOST_LOG_TRIVIAL(trace) << "base " << file->path().string();
+				auto baseRequest = buildRequest(file->path().string());
+				auto currDate = bgr::day_clock::local_day();
+	            for (int i = 0; i < 10; ++i)
+	            {
+					bgr::date friday, sunday;
+
+					std::tie(friday, sunday) = getNextWeekend(currDate);
+					baseRequest[U("request")][U("slice")][0][U("date")] = web::json::value::string(bgr::to_iso_extended_string(friday).c_str());
+	            }
+
             }
             else {
                 //std::thread th( &QPXService::query, this, file->path().string() );
