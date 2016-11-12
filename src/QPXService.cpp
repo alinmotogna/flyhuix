@@ -83,9 +83,8 @@ void QPXService::run()
 	            for (int i = 0; i < 10; ++i)
 	            {
 					bgr::date friday, sunday;
-
 					std::tie(friday, sunday) = getNextWeekend(currDate);
-					baseRequest[U("request")][U("slice")][0][U("date")] = web::json::value::string(bgr::to_iso_extended_string(friday).c_str());
+					baseRequest[U("request")][U("slice")][0][U("date")] = web::json::value::value(bgr::to_iso_extended_string(friday).c_str());
 	            }
 
             }
