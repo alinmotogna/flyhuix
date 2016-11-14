@@ -1,0 +1,20 @@
+{
+  "request": {
+    "passengers": {
+      "adultCount": 2
+    },
+    "slice": [
+      {
+        "origin": "HKG",
+        "destination": "MUC",
+        "date": "2016-12-30",
+      },
+      {
+        "origin": "MUC",
+        "destination": "HKG",
+        "date": "2017-01-09"
+      }
+    ],
+    "solutions": 10
+  }
+}

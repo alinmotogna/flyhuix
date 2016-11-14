@@ -15,11 +15,12 @@
         }
       },
       {
-        "origin": "DAD",
+        "origin": "",
         "destination": "HKG",
         "date": ""
       }
     ],
+	"maxPrice" : "HKD8000",
     "solutions": 10
   }
 }

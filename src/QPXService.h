@@ -25,6 +25,6 @@ public:
 
 private:
 	web::json::value buildRequest(std::string filename);
-    void query(const std::string req_file);
+    void query(const web::json::value request_msg);
 	void process(web::http::http_response response);
 };

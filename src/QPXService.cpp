@@ -11,12 +11,13 @@
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/locale.hpp>
 #include <locale>
 #include <iomanip>
 
 namespace bgr = boost::gregorian;
-
+namespace bfs = boost::filesystem;
 
 const utility::string_t QPXService::Resources::URL=U("https://www.googleapis.com/qpxExpress/v1/trips/search?key=");
 const utility::string_t QPXService::Resources::KEY=U("AIzaSyDLo2QRtu4g-k-hPUv3kLRY5c6dDMWOv_0");
@@ -69,33 +70,48 @@ void QPXService::run()
 {
     BOOST_LOG_TRIVIAL(trace) << "QPXService::run ";
 
-    boost::filesystem::path p("../requests");
+    bfs::path p("../requests");
 
     std::vector<std::thread> thrs;
-    for(auto file = boost::filesystem::directory_iterator(p); file != boost::filesystem::directory_iterator(); ++file)
-    {
+    for(auto file = bfs::directory_iterator(p); file != bfs::directory_iterator(); ++file)
+	{
         BOOST_LOG_TRIVIAL(trace) << "probing " << file->path();
-        if (file->path().extension() == ".json") {
-            if (file->path().filename() == "base.json") {
-                BOOST_LOG_TRIVIAL(trace) << "base " << file->path().string();
-				auto baseRequest = buildRequest(file->path().string());
-				auto currDate = bgr::day_clock::local_day();
-	            for (int i = 0; i < 10; ++i)
-	            {
-					bgr::date friday, sunday;
-					std::tie(friday, sunday) = getNextWeekend(currDate);
-					baseRequest[U("request")][U("slice")][0][U("date")] = web::json::value::value(bgr::to_iso_extended_string(friday).c_str());
-	            }
+		if (file->path().extension() != ".json")
+			continue;
+		
+        if (file->path().filename() == "base.json") {
+            BOOST_LOG_TRIVIAL(trace) << "base " << file->path().string();
+			auto jsonRequest = buildRequest(file->path().string());
+			auto currDate = bgr::day_clock::local_day();
+			auto destinations = getDestinations(bfs::path(p / "destinations.txt").string());
+			BOOST_LOG_TRIVIAL(trace) << "today is " << currDate << "; destinations: " << boost::algorithm::join(destinations, ", ");
 
-            }
-            else {
-                //std::thread th( &QPXService::query, this, file->path().string() );
-                // DISCUSSION:  capturing iterator object 'file' and calling query(file->path().string()) is not correct - race condition
-                //  http://stackoverflow.com/questions/36325039/starting-c11-thread-with-a-lambda-capturing-local-variable
-                auto fn = file->path().string();
-                std::thread th([fn, this] {query(fn); });
-                thrs.push_back(std::move(th));
-            }
+	        for (auto& dest : destinations)
+	        {
+				bgr::date friday, sunday;
+				std::tie(friday, sunday) = getNextWeekend(currDate);
+
+				auto& slices = jsonRequest[U("request")][U("slice")];
+				auto fridaystr = bgr::to_iso_extended_string(friday);
+				slices[0][U("date")] = web::json::value::string(utility::conversions::to_string_t(fridaystr));
+				slices[0][U("destination")] = web::json::value::string(utility::conversions::to_string_t(dest));
+
+				auto sundaystr = bgr::to_iso_extended_string(sunday);
+				slices[1][U("date")] = web::json::value::string(utility::conversions::to_string_t(sundaystr));
+				slices[1][U("origin")] = web::json::value::string(utility::conversions::to_string_t(dest));
+				std::thread th([jsonRequest, this] {query(jsonRequest); });
+				thrs.push_back(std::move(th));
+	        }
+        }
+        else {
+            //std::thread th( &QPXService::query, this, file->path().string() );
+            // DISCUSSION:  capturing iterator object 'file' and calling query(file->path().string()) is not correct - race condition
+            //  http://stackoverflow.com/questions/36325039/starting-c11-thread-with-a-lambda-capturing-local-variable
+			auto filename = file->path().string();
+			BOOST_LOG_TRIVIAL(trace) << "query from " << filename;
+			auto request_msg = buildRequest(filename);
+            std::thread th([request_msg, this] {query(request_msg); });
+            thrs.push_back(std::move(th));
         }
     }
 
@@ -103,13 +119,13 @@ void QPXService::run()
         t.join();
 }
 
-void QPXService::query(const std::string filename)
+void QPXService::query(const web::json::value request)
 {
-    BOOST_LOG_TRIVIAL(trace) << "query from " << filename;
+	BOOST_LOG_TRIVIAL(trace) << " request is " << request.serialize();
+
     try {
-        auto request_msg = buildRequest(filename);
         auto client = web::http::client::http_client(Resources::URL + Resources::KEY);
-        auto response = client.request(web::http::methods::POST, U(""), request_msg).get();
+        auto response = client.request(web::http::methods::POST, U(""), request).get();
         process(response);
     }
     catch (const web::json::json_exception &je) {
@@ -133,10 +149,8 @@ web::json::value QPXService::buildRequest(std::string filename)
 
     web::json::value message;
     buffer >> message;
-    BOOST_LOG_TRIVIAL(trace) << " message is " << message.serialize();
     return message;
 }
-
 
 class Leg
 {
